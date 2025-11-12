@@ -1,69 +1,82 @@
 ﻿syntax = "proto3";
 
+
 option csharp_namespace = "ECommerceGRPC.OrderService";
 
-package orderservice;
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
+package order;
+
+// Servicio de órdenes con gRPC
 service OrderService {
-
-	rpc GetOrders(GetOrdersRequest)   returns (stream OrderResponse);
-
-	rpc GetOrderById(GetOrderByIdRequest) returns (OrderResponse) ;
-
-	rpc GetOrderByUser(GetOrderByUserRequest) returns (stream OrderResponse);
-
-	rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
-
-	rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (OrderResponse);
- 
-	rpc CancelOrder(UpdateOrderStatusRequest) returns (OrderResponse);
-
+  rpc CreateOrder (CreateOrderRequest) returns (OrderResponse);
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
+  rpc ListOrders (ListOrdersRequest) returns (ListOrdersResponse);
+  rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
 }
 
-message GetOrdersRequest {
-	 int32 page_number = 1;      // Número de página (default: 1)
-     int32 page_size = 2;         // Tamaño de página (default: 10)     
-}
-
-message GetOrderByIdRequest {
-	int32 id = 1;
-}
-
-
-message GetOrderByUserRequest {
-	int32 user_id = 1;
-}
-
+// Mensajes de petición
 message CreateOrderRequest {
-	int32 user_id = 1 ;
-    double total_amount = 2;
-    string shipping_address = 3 ;
+  int32 user_id = 1;
+  string shipping_address = 2;
+  repeated OrderItemRequest items = 3;
+}
+
+message GetOrderRequest {
+  int32 id = 1;
 }
 
 message UpdateOrderStatusRequest {
-	int32 id = 1;
-    string status = 2 ;
+  int32 id = 1;
+  string status = 2;
+  string payment_transaction_id = 3;
 }
 
-message OrdenItemResponse {
-	int32 id = 1 ;
-    int32 product_id  = 2 ;
-    string product_name = 3 ; 
-    int32 quantity = 4 ;
-    double unit_price = 5 ;
-  
+message ListOrdersRequest {
+  int32 user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
 }
 
+message CancelOrderRequest {
+  int32 id = 1;
+}
 
+message OrderItemRequest {
+  int32 product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  string unit_price = 4; // decimal como string
+}
+
+// Mensajes de respuesta
 message OrderResponse {
-	 int32 id = 1 ;
-     int32 user_id  = 2 ;
-     string order_date =  3 ;
-     string status  = 4 ;
-     double total_amount = 5 ;
-     string shipping_address  = 6 ; 
-     repeated OrdenItemResponse items = 7;   
-     string payment_transaction_id = 8;
-     string updated_at = 9;
+  int32 id = 1;
+  int32 user_id = 2;
+  google.protobuf.Timestamp order_date = 3;
+  string status = 4;
+  string total_amount = 5; // decimal como string
+  string shipping_address = 6;
+  repeated OrderItemMessage items = 7;
+  google.protobuf.StringValue payment_transaction_id = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
 
+message OrderItemMessage {
+  int32 id = 1;
+  int32 order_id = 2;
+  int32 product_id = 3;
+  string product_name = 4;
+  int32 quantity = 5;
+  string unit_price = 6; // decimal como string
+  string subtotal = 7; // decimal como string
+}
+
+message ListOrdersResponse {
+  repeated OrderResponse orders = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
