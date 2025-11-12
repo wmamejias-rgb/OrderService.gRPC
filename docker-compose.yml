@@ -1,0 +1,34 @@
+﻿version: '3.8'
+
+services:
+   
+  # ====================================
+  # MICROSERVICIOS
+  # ====================================
+
+  # OrderService gRPC
+  orderservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce-grpc-orderservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # ⚠️ IMPORTANTE: Dentro de Docker, usa 'sqlserver' no 'localhost'
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ECommerceGRPCOrders;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ASPNETCORE_URLS=http://+:7003
+      # ⚠️ IMPORTANTE: Dentro de Docker, usa 'rabbitmq' no 'localhost'
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=admin
+      - RabbitMQ__Password=admin123
+    ports:
+      - "7003:7003"
+    networks:
+      - infra_microservices-network
+    volumes:
+      - ./logs:/app/logs
+    restart: on-failure
+
+networks:
+  infra_microservices-network:
+    external: true
