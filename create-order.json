@@ -1,0 +1,18 @@
+{
+  "user_id": 1,
+  "shipping_address": "Av. Principal 123, San José, Costa Rica",
+  "items": [
+    {
+      "product_id": 101,
+      "product_name": "Laptop Dell XPS 15",
+      "quantity": 1,
+      "unit_price": "1299,99"
+    },
+    {
+      "product_id": 102,
+      "product_name": "Mouse Logitech",
+      "quantity": 2,
+      "unit_price": "99,99"
+    }
+  ]
+}

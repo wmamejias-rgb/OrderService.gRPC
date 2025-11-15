@@ -26,7 +26,7 @@ namespace OrderService.gRPC.Services
             {
                 UserId = request.UserId,
                 ShippingAddress = request.ShippingAddress,
-                OrderDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
                 Status = "Pending",
                 Items = request.Items.Select(i => new OrderItem
                 {
@@ -38,7 +38,8 @@ namespace OrderService.gRPC.Services
             };
 
             // Calcular total
-            order.TotalAmount = order.Items.Sum(i => i.Quantity * i.UnitPrice);
+            // order.TotalAmount = order.Items.Sum(i => i.Quantity * i.UnitPrice);
+            order.TotalAmount = order.Items.Sum(i => i.Subtotal);
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -74,7 +75,7 @@ namespace OrderService.gRPC.Services
             }
 
             order.Status = request.Status;
-            order.UpdatedAt = DateTime.UtcNow;
+            order.CompletedAt = DateTime.UtcNow;
 
             if (!string.IsNullOrEmpty(request.PaymentTransactionId))
             {
@@ -106,7 +107,7 @@ namespace OrderService.gRPC.Services
             var pageSize = request.PageSize > 0 ? request.PageSize : 10;
 
             var orders = await query
-                .OrderByDescending(o => o.OrderDate)
+                .OrderByDescending(o => o.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -141,7 +142,7 @@ namespace OrderService.gRPC.Services
             }
 
             order.Status = "Cancelled";
-            order.UpdatedAt = DateTime.UtcNow;
+            order.CompletedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -156,7 +157,7 @@ namespace OrderService.gRPC.Services
             {
                 Id = order.Id,
                 UserId = order.UserId,
-                OrderDate = Timestamp.FromDateTime(order.OrderDate.ToUniversalTime()),
+                OrderDate = Timestamp.FromDateTime(order.CreatedAt.ToUniversalTime()),
                 Status = order.Status,
                 TotalAmount = order.TotalAmount.ToString("F2"),
                 ShippingAddress = order.ShippingAddress
@@ -167,9 +168,9 @@ namespace OrderService.gRPC.Services
                 response.PaymentTransactionId = order.PaymentTransactionId;
             }
 
-            if (order.UpdatedAt.HasValue)
+            if (order.CompletedAt.HasValue)
             {
-                response.UpdatedAt = Timestamp.FromDateTime(order.UpdatedAt.Value.ToUniversalTime());
+                response.UpdatedAt = Timestamp.FromDateTime(order.CompletedAt.Value.ToUniversalTime());
             }
 
             response.Items.AddRange(order.Items.Select(i => new OrderItemMessage
